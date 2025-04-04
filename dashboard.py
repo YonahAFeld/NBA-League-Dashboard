@@ -123,28 +123,32 @@ def parse_player_years(years_str):
 # Load and process the CSV data
 @st.cache_data
 def load_data():
-    # Load main stats data
-    stats_file = "/Users/yonahfeld/NBA League Dashboard/Avg league stats per game.csv"
-    df_stats = pd.read_csv(stats_file, header=1)
-    df_stats['SortYear'] = df_stats['Season'].apply(season_to_year)
-    df_stats.sort_values('SortYear', inplace=True)
-    
-    # Rename columns to be more user-friendly
-    df_stats = df_stats.rename(columns=STAT_NAMES)
-    
-    # Load player career data
     try:
-        players_file = "/Users/yonahfeld/NBA League Dashboard/NBA_Players_Career_Spans.csv"
-        df_players = pd.read_csv(players_file)
-        # Use the parse_player_years function to handle all cases
-        career_years = df_players['Years Active'].apply(parse_player_years)
-        df_players['Start_Year'] = [years[0] for years in career_years]
-        df_players['End_Year'] = [years[1] for years in career_years]
+        # Load main stats data
+        stats_file = "data/Avg league stats per game.csv"
+        df_stats = pd.read_csv(stats_file, header=1)
+        df_stats['SortYear'] = df_stats['Season'].apply(season_to_year)
+        df_stats.sort_values('SortYear', inplace=True)
+        
+        # Rename columns to be more user-friendly
+        df_stats = df_stats.rename(columns=STAT_NAMES)
+        
+        # Load player career data
+        try:
+            players_file = "data/NBA_Players_Career_Spans.csv"
+            df_players = pd.read_csv(players_file)
+            # Use the parse_player_years function to handle all cases
+            career_years = df_players['Years Active'].apply(parse_player_years)
+            df_players['Start_Year'] = [years[0] for years in career_years]
+            df_players['End_Year'] = [years[1] for years in career_years]
+        except Exception as e:
+            st.sidebar.error(f"Error loading player data: {str(e)}")
+            df_players = pd.DataFrame()
+        
+        return df_stats, df_players
     except Exception as e:
-        st.sidebar.error(f"Error loading player data: {str(e)}")
-        df_players = pd.DataFrame()
-    
-    return df_stats, df_players
+        st.error(f"Error loading data: Could not find the required CSV files in the data directory. Please make sure the files are present in the correct location.")
+        st.stop()
 
 df, df_players = load_data()
 
